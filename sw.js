@@ -1,4 +1,4 @@
-const CACHE = 'roastlab-v4';
+const CACHE = 'roastlab-v9';
 const ASSETS = [
   './',
   './index.html',

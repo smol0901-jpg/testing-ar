@@ -140,6 +140,29 @@ main{max-width:640px; margin:0 auto; padding:16px;}
   padding:8px 13px; border-radius:100px; font-size:12.5px; font-weight:700; font-family:var(--font-mono);
 }
 .lvl-presets button.active{background:var(--teal); color:#04211d; border-color:var(--teal);}
+.lvl-presets button.freq-chip{border-style:dashed;}
+.freq-chips{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;}
+.freq-chips button{
+  background:var(--panel-2); border:1px dashed var(--border); color:var(--text-dim);
+  padding:7px 11px; border-radius:100px; font-size:11.5px; font-weight:600; font-family:var(--font-mono);
+}
+.freq-chips button:active{background:#1a222c;}
+.parent-info{
+  background:var(--panel-2); border:1px solid var(--border); border-radius:var(--radius-sm);
+  padding:11px 12px; margin-bottom:10px; font-size:12.5px; display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+}
+.parent-info b{color:var(--teal); display:block; margin-bottom:2px;}
+.parent-info .rm{color:var(--red); font-size:11px; font-weight:700; flex:none;}
+.chain-badge{
+  display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700;
+  color:var(--teal); background:rgba(56,224,209,0.1); padding:2px 8px; border-radius:100px; margin-top:4px;
+}
+.parent-pick-item{
+  padding:11px 12px; border:1px solid var(--border-soft); border-radius:var(--radius-sm);
+  margin-bottom:8px; background:var(--panel-2);
+}
+.parent-pick-item .t{font-weight:700; font-size:13px;}
+.parent-pick-item .s{font-size:11.5px; color:var(--text-faint); margin-top:2px;}
 .lvl-table-wrap{max-height:52vh; overflow:auto; border:1px solid var(--border-soft); border-radius:var(--radius-sm);}
 .lvl-table-head{
   display:grid; grid-template-columns:28px repeat(4, minmax(64px,1fr)); gap:5px; min-width:300px;
@@ -212,6 +235,18 @@ input.input-warn{border-color:var(--amber); box-shadow:0 0 0 3px rgba(255,138,61
   overflow-y:auto;
 }
 .report-box b{color:var(--teal);}
+.photo-gallery{display:flex; gap:8px; overflow-x:auto; padding-bottom:4px;}
+.photo-gallery:empty{display:none;}
+.photo-item{
+  position:relative; flex:none; width:92px; height:92px; border-radius:10px;
+  overflow:hidden; border:1px solid var(--border-soft); background:var(--panel-2);
+}
+.photo-item img{width:100%; height:100%; object-fit:cover; display:block;}
+.photo-item .rm-photo{
+  position:absolute; top:3px; right:3px; width:21px; height:21px; border-radius:50%;
+  background:rgba(0,0,0,0.7); color:#fff; font-size:12px; line-height:1; display:flex;
+  align-items:center; justify-content:center; border:none; padding:0;
+}
 
 /* ---------- history ---------- */
 .search-bar{display:flex; gap:8px; margin-bottom:14px;}
@@ -343,12 +378,31 @@ input.input-warn{border-color:var(--amber); box-shadow:0 0 0 3px rgba(255,138,61
       <div class="row">
         <div class="field">
           <label>Рецепт</label>
-          <input type="text" id="f-recipe" placeholder="Стандарт">
+          <input type="text" id="f-recipe" placeholder="Стандарт" list="dl-recipe" autocomplete="off">
+          <datalist id="dl-recipe"></datalist>
         </div>
       </div>
       <div class="field">
         <label>Цель теста</label>
-        <input type="text" id="f-goal" placeholder="Настройка режимов на 3 противня">
+        <input type="text" id="f-goal" placeholder="Настройка режимов на 3 противня" list="dl-goal" autocomplete="off">
+        <datalist id="dl-goal"></datalist>
+      </div>
+
+      <div class="divider"></div>
+      <div class="switch-row" style="margin-bottom:10px;">
+        <div>
+          <div class="switch-label">Продолжение другого теста</div>
+          <div class="switch-desc">Этап 1 уже готов в другом тесте — берём его как источник</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="f-isContinuation"><span class="toggle-slider"></span></label>
+      </div>
+      <div id="parentLinkBlock" style="display:none;">
+        <button class="btn btn-secondary" id="btnPickParent" style="margin-bottom:10px;">Выбрать тест-источник</button>
+        <div id="parentInfo" class="parent-info" style="display:none;"></div>
+        <div class="field" id="parentLevelField" style="display:none;">
+          <label>Уровень источника (какой противень этапа 1 продолжаем)</label>
+          <select id="f-parentLevel"></select>
+        </div>
       </div>
     </div>
 
@@ -370,13 +424,14 @@ input.input-warn{border-color:var(--amber); box-shadow:0 0 0 3px rgba(255,138,61
 
     <div class="card">
       <div class="section-title"><span class="n">3</span>Режимы и температура</div>
+      <div class="freq-chips" id="regimeFreqChips" style="display:none;"></div>
       <div class="row">
-        <div class="field"><label>Режим 1</label><input type="text" id="f-r1" placeholder="1:30"></div>
-        <div class="field"><label>Режим 2</label><input type="text" id="f-r2" placeholder="6:00"></div>
+        <div class="field"><label>Режим 1</label><input type="text" id="f-r1" placeholder="1:30" list="dl-r1" autocomplete="off"><datalist id="dl-r1"></datalist></div>
+        <div class="field"><label>Режим 2</label><input type="text" id="f-r2" placeholder="6:00" list="dl-r2" autocomplete="off"><datalist id="dl-r2"></datalist></div>
       </div>
       <div class="row">
-        <div class="field"><label>Режим 3</label><input type="text" id="f-r3" placeholder="1:00"></div>
-        <div class="field"><label>Режим 4</label><input type="text" id="f-r4" placeholder="6:30"></div>
+        <div class="field"><label>Режим 3</label><input type="text" id="f-r3" placeholder="1:00" list="dl-r3" autocomplete="off"><datalist id="dl-r3"></datalist></div>
+        <div class="field"><label>Режим 4</label><input type="text" id="f-r4" placeholder="6:30" list="dl-r4" autocomplete="off"><datalist id="dl-r4"></datalist></div>
       </div>
       <div class="hint">Формат мин:сек. Если этап однократный — заполните только Режим 1–2.</div>
       <div class="divider"></div>
@@ -475,6 +530,7 @@ input.input-warn{border-color:var(--amber); box-shadow:0 0 0 3px rgba(255,138,61
         <button data-mode="full">Полный</button>
         <button data-mode="short">Краткий</button>
       </div>
+      <button class="btn btn-ghost" id="btnChainReport" style="display:none; margin-bottom:12px;">🔗 Показать всю цепочку тестов</button>
       <div class="report-box" id="reportText">—</div>
       <div class="btn-row">
         <button class="btn btn-primary" id="btnShare">↗ Поделиться</button>
@@ -482,6 +538,22 @@ input.input-warn{border-color:var(--amber); box-shadow:0 0 0 3px rgba(255,138,61
       </div>
       <div style="height:8px"></div>
       <button class="btn btn-ghost" id="btnDownloadTxt">Скачать .txt</button>
+    </div>
+    <div class="card" id="photoCard">
+      <div class="section-title">📷 Фото теста</div>
+      <div id="photoGallery" class="photo-gallery"></div>
+      <div class="hint" id="photoCountHint" style="margin-bottom:10px;">Фото ещё не добавлены</div>
+      <input type="file" id="photoCameraInput" accept="image/*" capture="environment" style="display:none;">
+      <input type="file" id="photoGalleryInput" accept="image/*" multiple style="display:none;">
+      <div class="btn-row" style="margin-top:0;">
+        <button class="btn btn-secondary" id="btnAddPhotoCamera">📷 Камера</button>
+        <button class="btn btn-secondary" id="btnAddPhotoGallery">🖼️ Из галереи</button>
+      </div>
+      <div class="hint">При «Поделиться» все фото уйдут вместе с текстом отчёта одним тапом, если это поддерживает браузер/мессенджер — иначе можно скачать их отдельно и прикрепить вручную. Можно добавлять сколько угодно — хранятся только на этом устройстве.</div>
+      <div class="btn-row" id="photoBulkRow" style="display:none;">
+        <button class="btn btn-ghost" id="btnDownloadAllPhotos">Скачать все</button>
+        <button class="btn btn-danger" id="btnClearPhotos">Убрать все</button>
+      </div>
     </div>
     <div class="card" id="aiCard">
       <div class="section-title">🧠 AI-анализ</div>
@@ -525,16 +597,74 @@ input.input-warn{border-color:var(--amber); box-shadow:0 0 0 3px rgba(255,138,61
         <div class="field"><label>Допустимая посадка, макс °C</label><input type="text" id="f-tempMax" placeholder="260"></div>
       </div>
       <div class="hint">Если посадочная температура выходит за диапазон — поле подсветится, а отчёт пометит значение «⚠».</div>
+      <div class="divider"></div>
+      <div class="switch-row">
+        <div>
+          <div class="switch-label">Подпись и ссылка NEURAL_ARCHITECT_PREMIUM++</div>
+          <div class="switch-desc">Внизу каждого отчёта</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="f-showBranding"><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Состав отчёта</div>
+      <div class="hint" style="margin-bottom:12px;">Что включать в отчёт. Например, если сегодня готовили только первый этап — выключите «Этап 2», и отчёт не будет показывать пустые поля глазури и второго выхода.</div>
+      <div class="switch-row"><div class="switch-label">Цель теста</div><label class="toggle"><input type="checkbox" id="sec-goal"><span class="toggle-slider"></span></label></div>
+      <div class="divider" style="margin:10px 0;"></div>
+      <div class="switch-row"><div class="switch-label">Разница посадки Р1/Р2</div><label class="toggle"><input type="checkbox" id="sec-posadkaDelta"><span class="toggle-slider"></span></label></div>
+      <div class="divider" style="margin:10px 0;"></div>
+      <div class="switch-row"><div class="switch-label">t° мяса перед стартом</div><label class="toggle"><input type="checkbox" id="sec-tStart"><span class="toggle-slider"></span></label></div>
+      <div class="divider" style="margin:10px 0;"></div>
+      <div class="switch-row"><div class="switch-label">Норма и потери фасовки</div><label class="toggle"><input type="checkbox" id="sec-normLoss"><span class="toggle-slider"></span></label></div>
+      <div class="divider" style="margin:10px 0;"></div>
+      <div class="switch-row">
+        <div>
+          <div class="switch-label">Этап 1</div>
+          <div class="switch-desc">Выход, ужарка, температура, комментарий</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="sec-stage1"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="divider" style="margin:10px 0;"></div>
+      <div class="switch-row">
+        <div>
+          <div class="switch-label">Этап 2</div>
+          <div class="switch-desc">Глазурь, вход после шокера, выход, комментарий</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="sec-stage2"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="divider" style="margin:10px 0;"></div>
+      <div class="switch-row"><div class="switch-label">Общее примечание</div><label class="toggle"><input type="checkbox" id="sec-note"><span class="toggle-slider"></span></label></div>
+      <div style="height:6px"></div>
+      <button class="btn btn-ghost" id="btnOnlyStage1">Быстро: только 1 этап</button>
     </div>
 
     <div class="card">
       <div class="section-title">🧠 AI-анализ (опционально)</div>
       <div class="field">
-        <label>Anthropic API ключ</label>
-        <input type="password" id="apiKeyInput" placeholder="sk-ant-…">
+        <label>Провайдер нейросети</label>
+        <select id="aiProvider">
+          <option value="anthropic">Anthropic (Claude)</option>
+          <option value="openai">OpenAI (GPT)</option>
+          <option value="google">Google (Gemini)</option>
+          <option value="deepseek">DeepSeek</option>
+          <option value="custom">Другое (свой сервер, OpenAI-совместимый)</option>
+        </select>
       </div>
-      <div class="hint">Ключ хранится только в памяти этого браузера (localStorage) и никуда не отправляется, кроме api.anthropic.com напрямую с этого устройства. Не используйте общий/рабочий браузер для хранения личного ключа.</div>
-      <div class="btn-row"><button class="btn btn-secondary" id="btnSaveKey">Сохранить ключ</button></div>
+      <div class="field">
+        <label>API ключ</label>
+        <input type="password" id="apiKeyInput" placeholder="Ключ вашего провайдера">
+      </div>
+      <div class="field">
+        <label>Модель</label>
+        <input type="text" id="aiModel" placeholder="напр. claude-sonnet-4-6">
+      </div>
+      <div class="field" id="aiBaseUrlField" style="display:none;">
+        <label>Адрес API (Base URL)</label>
+        <input type="text" id="aiBaseUrl" placeholder="https://host/v1 или .../chat/completions">
+      </div>
+      <div class="hint">Ключ хранится только в этом браузере (localStorage) и уходит напрямую с этого устройства выбранному провайдеру — никуда больше. Не используйте общий/рабочий браузер для хранения личного ключа. Некоторые провайдеры блокируют прямые запросы из браузера (CORS) — если анализ не запускается, попробуйте другого провайдера.</div>
+      <div class="btn-row"><button class="btn btn-secondary" id="btnSaveKey">Сохранить</button></div>
     </div>
 
     <div class="card">
@@ -565,7 +695,7 @@ input.input-warn{border-color:var(--amber); box-shadow:0 0 0 3px rgba(255,138,61
 
     <div class="footer-stamp">
       Сделано с помощью NEURAL_ARCHITECT_PREMIUM++<br>
-      <a href="https://smol0901-jpg.github.io/neural-architect-premium-pages/" target="_blank" rel="noopener">smol0901-jpg.github.io/neural-architect-premium-pages</a>
+      <a href="https://smol0901-jpg.github.io/testing/index.html" target="_blank" rel="noopener">smol0901-jpg.github.io/testing</a>
     </div>
   </section>
 
@@ -618,8 +748,23 @@ input.input-warn{border-color:var(--amber); box-shadow:0 0 0 3px rgba(255,138,61
       <button class="btn btn-secondary" id="actDup">Дублировать</button>
       <button class="btn btn-danger" id="actDel">Удалить</button>
     </div>
+    <div class="btn-row" id="actChainRow" style="display:none;">
+      <button class="btn btn-secondary" id="actChain">🔗 Сквозной отчёт (вся цепочка)</button>
+    </div>
     <div style="height:6px"></div>
     <button class="btn btn-ghost" id="actClose">Закрыть</button>
+  </div>
+</div>
+
+<!-- Parent test picker modal -->
+<div class="modal-backdrop" id="parentPickModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Выбрать тест-источник</div>
+    <input type="text" id="parentSearchInput" placeholder="№ теста, дата, рецепт…" style="margin-bottom:10px;">
+    <div id="parentPickList" style="max-height:50vh; overflow-y:auto;"></div>
+    <div style="height:10px"></div>
+    <button class="btn btn-ghost" id="parentPickClose">Отмена</button>
   </div>
 </div>
 
